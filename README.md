@@ -1,4 +1,4 @@
-﻿# Stock Agent
+# Stock Agent
 
 A self-improving stock market agent built with MLOps/LLMOps practices.
 
