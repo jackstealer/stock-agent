@@ -1,0 +1,11 @@
+﻿tickers:
+  - RELIANCE.NS
+  - TCS.NS
+  - INFY.NS
+  - HDFCBANK.NS
+splits:
+  train_end: "2022-12-31"
+  val_end: "2023-12-31"
+  # everything after val_end is the locked test set
+costs:
+  slippage_pct: 0.05

@@ -1,0 +1,8 @@
+﻿pandas
+numpy
+yfinance
+pandera
+pyarrow
+pytest
+python-dotenv
+pyyaml
