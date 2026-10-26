@@ -19,6 +19,10 @@ def fetch_eod(ticker: str, start: str, end: str | None = None) -> pd.DataFrame:
     if isinstance(raw.columns, pd.MultiIndex):      # newer yfinance versions
         raw.columns = raw.columns.get_level_values(0)
     raw = raw.dropna(subset=["Open", "High", "Low", "Close"])
+        # Yahoo fills days the market was closed with flat, zero-volume placeholder bars
+    placeholder = ((raw["Volume"] == 0) & (raw["Open"] == raw["High"])
+                   & (raw["High"] == raw["Low"]) & (raw["Low"] == raw["Close"]))
+    raw = raw[~placeholder]
 
     return pd.DataFrame({
         "timestamp": raw.index,
