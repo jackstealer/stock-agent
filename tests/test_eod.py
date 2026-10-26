@@ -25,3 +25,15 @@ def test_fetch_eod_formats_rows(monkeypatch):
 def test_empty_download_returns_empty_frame(monkeypatch):
     monkeypatch.setattr(eod.yf, "download", lambda *a, **k: pd.DataFrame())
     assert eod.fetch_eod("TEST.NS", "2024-01-01").empty
+def test_placeholder_bars_are_dropped(monkeypatch):
+    def fake(*args, **kwargs):
+        idx = pd.to_datetime(["2024-01-01", "2024-01-02"])
+        cols = pd.MultiIndex.from_product(
+            [["Open", "High", "Low", "Close", "Adj Close", "Volume"], ["TEST.NS"]])
+        data = [[100, 101, 99, 100, 100, 1000],
+                [100, 100, 100, 100, 100, 0]]     # flat + zero volume = placeholder
+        return pd.DataFrame(data, index=idx, columns=cols)
+
+    monkeypatch.setattr(eod.yf, "download", fake)
+    df = eod.fetch_eod("TEST.NS", "2024-01-01", "2024-01-03")
+    assert len(df) == 1
