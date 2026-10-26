@@ -1,8 +1,30 @@
+backfill_start: "2019-01-01"
 tickers:
   - RELIANCE.NS
   - TCS.NS
   - INFY.NS
   - HDFCBANK.NS
+  - ICICIBANK.NS
+  - SBIN.NS
+  - BHARTIARTL.NS
+  - ITC.NS
+  - LT.NS
+  - KOTAKBANK.NS
+  - AXISBANK.NS
+  - HINDUNILVR.NS
+  - BAJFINANCE.NS
+  - MARUTI.NS
+  - SUNPHARMA.NS
+  - TITAN.NS
+  - ASIANPAINT.NS
+  - ULTRACEMCO.NS
+  - NESTLEIND.NS
+  - WIPRO.NS
+  - HCLTECH.NS
+  - NTPC.NS
+  - POWERGRID.NS
+  - ONGC.NS
+  - TATASTEEL.NS
 splits:
   train_end: "2022-12-31"
   val_end: "2023-12-31"
