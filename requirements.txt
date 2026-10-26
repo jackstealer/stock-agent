@@ -6,3 +6,5 @@ pyarrow
 pytest
 python-dotenv
 pyyaml
+xgboost
+scikit-learn
