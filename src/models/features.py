@@ -28,10 +28,12 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
 def add_label(d: pd.DataFrame) -> pd.DataFrame:
     """Label at row t = did buying at tomorrow's open and selling 5 days later
     gain more than THRESHOLD? Same timing the backtester uses.
-    `label_end` is when that outcome becomes known, which we need for purging."""
+    `fwd_ret` is that trade's return; `label_end` is when the outcome becomes
+    known, which we need for purging."""
     entry = d["open"].shift(-1)
     exit_ = d["open"].shift(-(HORIZON + 1))
-    d["target"] = ((exit_ / entry - 1) > THRESHOLD).astype(float)
-    d.loc[exit_.isna(), "target"] = np.nan
+    d["fwd_ret"] = exit_ / entry - 1
+    d["target"] = (d["fwd_ret"] > THRESHOLD).astype(float)
+    d.loc[d["fwd_ret"].isna(), "target"] = np.nan
     d["label_end"] = d["timestamp"].shift(-(HORIZON + 1))
     return d
