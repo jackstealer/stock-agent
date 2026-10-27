@@ -3,13 +3,20 @@ import yfinance as yf
 
 from ..schema import COLUMNS, TZ
 
+def default_end(now=None) -> str:
+    """End date (exclusive) for yfinance. After 18:00 IST on a weekday the day's
+    bar is treated as final and included. Before that it is excluded, because it
+    would be an unfinished candle."""
+    now = now if now is not None else pd.Timestamp.now(tz=TZ)
+    include_today = now.weekday() < 5 and now.hour >= 18
+    return (now + pd.Timedelta(days=int(include_today))).strftime("%Y-%m-%d")
 
 def fetch_eod(ticker: str, start: str, end: str | None = None) -> pd.DataFrame:
     """Download daily bars and return them in our standard row format.
     `end` is exclusive and defaults to today (IST), so today's bar,
     which is incomplete until the market closes, is never fetched."""
     if end is None:
-        end = pd.Timestamp.now(tz=TZ).strftime("%Y-%m-%d")
+        end = default_end()
 
     raw = yf.download(ticker, start=start, end=end, interval="1d",
                       auto_adjust=False, progress=False)
