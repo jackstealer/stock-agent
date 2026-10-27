@@ -26,3 +26,10 @@ Every experiment goes here, including failures. The evaluation window is
   smaller drawdown; (2) Sharpe above the momentum rule; (3) Sharpe above all 20
   random portfolios.
 - Anything less is a failure, and gets logged as one.
+- Result: AUC 0.487 / 0.482 / 0.501. Model top-5: +25.9%, Sharpe 0.57, max drawdown
+  -31.8%, 957 trades, Rs 6.5 lakh fees + Rs 2.8 lakh slippage. Buy-and-hold (25 stocks):
+  +75.8%, Sharpe 1.46, drawdown -17.2%. Momentum top-5: -3.8%, Sharpe 0.01. Random
+  top-5 (mean of 20): +24.6%, Sharpe 0.53; model beat 8 of 20.
+- Verdict against pre-registered criteria: (1) FAIL, (2) pass, (3) FAIL. Experiment failed.
+- Conclusion: no edge from price-only features in either formulation (absolute and
+  cross-sectional). Costs from turnover are a large drag. Nothing was tuned afterwards.
