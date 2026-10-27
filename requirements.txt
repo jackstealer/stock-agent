@@ -8,3 +8,6 @@ python-dotenv
 pyyaml
 xgboost
 scikit-learn
+mlflow
+
+requests
