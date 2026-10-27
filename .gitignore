@@ -28,3 +28,5 @@ mlflow.db
 logs/
 
 state/
+
+data/news/
