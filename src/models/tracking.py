@@ -18,4 +18,5 @@ def log_run(run_name: str, params: dict, aucs: dict, table) -> None:
         for strat, row in table.iterrows():
             for k in ("total_return", "cagr", "sharpe", "max_drawdown",
                       "trades", "fees", "slippage", "invested"):
-                mlflow.log_metric(f"{_clean(strat)}__{k}", float(row[k]))
+                if k in table.columns:
+                    mlflow.log_metric(f"{_clean(strat)}__{k}", float(row[k]))
