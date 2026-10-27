@@ -23,3 +23,6 @@ mlruns/
 .DS_Store
 .vscode/
 .idea/
+mlflow.db
+
+logs/
