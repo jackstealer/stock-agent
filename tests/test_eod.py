@@ -37,3 +37,17 @@ def test_placeholder_bars_are_dropped(monkeypatch):
     monkeypatch.setattr(eod.yf, "download", fake)
     df = eod.fetch_eod("TEST.NS", "2024-01-01", "2024-01-03")
     assert len(df) == 1
+
+def test_today_excluded_before_6pm():
+    now = pd.Timestamp("2024-01-03 12:00", tz="Asia/Kolkata")      # Wednesday
+    assert eod.default_end(now) == "2024-01-03"
+
+
+def test_today_included_after_6pm_on_weekdays():
+    now = pd.Timestamp("2024-01-03 19:00", tz="Asia/Kolkata")
+    assert eod.default_end(now) == "2024-01-04"
+
+
+def test_weekend_never_includes_today():
+    now = pd.Timestamp("2024-01-06 19:00", tz="Asia/Kolkata")      # Saturday
+    assert eod.default_end(now) == "2024-01-06"
