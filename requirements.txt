@@ -13,3 +13,5 @@ mlflow
 requests
 
 scipy
+
+streamlit
