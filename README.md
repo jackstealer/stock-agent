@@ -1,4 +1,5 @@
 # stock-agent
+![CI](https://github.com/jackstealer/stock-agent/actions/workflows/ci.yml/badge.svg)
 
 A research and paper-trading system for 25 large-cap NSE stocks, built around one idea: **evaluate honestly before trusting anything**. It has a cost-aware backtester, a locked test split, experiment tracking, risk limits with a kill switch, and a gate that decides whether a strategy has earned a further look.
 
@@ -46,7 +47,7 @@ Reading: price-only daily signals on these stocks, at retail costs, did not beat
 
 ## Not built yet
 
-Live broker data (Angel One WebSocket), CI and containers, a dashboard, and an LLM sentiment feature (headlines are only being collected so far).
+Live broker data (Angel One WebSocket), a dashboard, and an LLM sentiment feature (headlines are only being collected so far). CI and a Docker image for the scheduled jobs exist; the jobs still run on a laptop scheduler.
 
 ## Quick start (Windows PowerShell)
 
