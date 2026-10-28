@@ -47,9 +47,14 @@ Reading: price-only daily signals on these stocks, at retail costs, did not beat
 
 ## Not built yet
 
-Live broker data (Angel One WebSocket), a dashboard, and an LLM sentiment feature (headlines are only being collected so far). CI and a Docker image for the scheduled jobs exist; the jobs still run on a laptop scheduler.
+Live broker data (Angel One WebSocket) and an LLM sentiment feature (headlines are only being collected so far). CI and a Docker image for the scheduled jobs exist; the jobs still run on a laptop scheduler.
 
 ## Quick start (Windows PowerShell)
+Dashboard (read-only, no controls):
+
+```powershell
+.venv\Scripts\streamlit.exe run dashboard\app.py
+```
 
 ```powershell
 git clone https://github.com/jackstealer/stock-agent.git
