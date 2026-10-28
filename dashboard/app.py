@@ -92,8 +92,10 @@ with tab3:
               f"{expected_max_sharpe(n, VAR_FLOOR_DAILY) * np.sqrt(252):.2f}")
     try:
         problems = compare([t["mlflow_run"] for t in load_trials()], mlflow_run_names())
-        st.success("Registry matches MLflow") if not problems else \
+        if problems:
             st.error("; ".join(problems))
+        else:
+            st.success("Registry matches MLflow")
     except Exception as e:
         st.warning(f"Could not read MLflow: {e}")
     st.subheader("Experiment log")
