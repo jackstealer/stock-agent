@@ -1,0 +1,7 @@
+# Every experiment run logged to MLflow must be listed here, in order.
+# Running an experiment again counts as another trial: list it again, with a note.
+trials:
+  - {id: exp1,  mlflow_run: "xgb_thr0.5",                note: "XGBoost, absolute label"}
+  - {id: exp2,  mlflow_run: "xgb_xs_top5_reb5",          note: "cross-sectional top-5"}
+  - {id: exp3a, mlflow_run: "exp3a_momentum_12_1_top8",  note: "momentum, monthly"}
+  - {id: exp3b, mlflow_run: "exp3b_trend_filter_200d",   note: "trend filter, weekly"}
