@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 
 from src.backtest.costs import DEFAULT_COSTS
@@ -41,12 +42,30 @@ def test_running_twice_the_same_day_does_nothing(tmp_path, monkeypatch):
     assert "already ran" in day("buy_hold", 1)
 
 
-def test_missed_day_expires_pending_orders(tmp_path, monkeypatch):
+def test_missed_days_are_replayed_in_order(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     day("buy_hold", 1)
-    msg = day("buy_hold", 3)                 # day 2 was skipped
-    assert "expired" in msg
-    assert read_positions(tmp_path, "buy_hold") == {}
+    msg = day("buy_hold", 3)                    # day 2 was skipped, so it is replayed
+    assert "replayed 2 days" in msg
+    assert read_positions(tmp_path, "buy_hold") == {t: 990 for t in "ABCDE"}
+    log = (tmp_path / "state" / "paper_buy_hold" / "orders.jsonl").read_text().splitlines()
+    filled_days = {json.loads(x)["day"] for x in log if json.loads(x)["status"] == "filled"}
+    assert filled_days == {"2024-01-02"}        # filled at day 2's open, not day 3's
+
+
+def test_load_frames_drops_dates_missing_for_any_stock(monkeypatch):
+    from src.paper import run_daily
+
+    def fake_bars(t, interval, root="data/raw"):
+        dates = (["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04"] if t == "A"
+                 else ["2024-01-01", "2024-01-03", "2024-01-04"])   # B lacks 01-02
+        ts = pd.to_datetime(dates).tz_localize("Asia/Kolkata")
+        return pd.DataFrame({"timestamp": ts, "open": 100.0, "close": 100.0})
+
+    monkeypatch.setattr(run_daily, "read_bars", fake_bars)
+    O, C, latest, lagging = run_daily.load_frames(["A", "B"])
+    assert list(O.index) == ["2024-01-01", "2024-01-03", "2024-01-04"]
+    assert latest == "2024-01-04" and lagging == []
 
 
 def test_global_kill_switch_stops_fills(tmp_path, monkeypatch):

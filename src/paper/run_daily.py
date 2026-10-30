@@ -52,6 +52,8 @@ def load_frames(tickers):
     latest = min(last.values())
     O = pd.DataFrame(opens).sort_index().loc[:latest]
     C = pd.DataFrame(closes).sort_index().loc[:latest]
+    ok = O.notna().all(axis=1) & C.notna().all(axis=1)   # only days every stock traded
+    O, C = O[ok], C[ok]
     lagging = [t for t, v in last.items() if v < max(last.values())]
     return O, C, latest, lagging
 
@@ -82,6 +84,42 @@ def rebalance(broker, day, targets, opens):
     return filled, rejected
 
 
+def process_day(strategy, broker, rs, O, C, day):
+    """One trading day: fill yesterday's signal at today's open, mark at the close,
+    then decide tomorrow's orders. Returns (filled, rejected, note, halted)."""
+    halted = killswitch.is_engaged() or killswitch.is_engaged(broker.kill_path)
+    filled = rejected = 0
+    note = ""
+
+    pending = rs["pending"]
+    if pending:
+        later = [x for x in O.index if x > pending["signal_day"]]
+        if later and later[0] != day:
+            note = " (pending orders expired)"
+        elif later and not halted:
+            broker.mark(day, O.loc[day].to_dict())
+            filled, rejected = rebalance(broker, day, pending["targets"], O.loc[day])
+
+    broker.mark(day, C.loc[day].to_dict())
+    halted = halted or killswitch.is_engaged(broker.kill_path)
+
+    new_pending = None
+    if not halted:
+        ctx = {"tickers": list(O.columns), "positions": broker.s["positions"],
+               "runs_since_rebalance": rs["runs_since_rebalance"],
+               "ret_20": C.loc[:day].pct_change(20, fill_method=None).iloc[-1]}
+        targets = strategy(ctx)
+        if targets:
+            new_pending = {"signal_day": day, "targets": targets}
+            rs["runs_since_rebalance"] = 0
+        else:
+            rs["runs_since_rebalance"] += 1
+
+    rs["last_run_day"] = day
+    rs["pending"] = new_pending
+    return filled, rejected, note, halted
+
+
 def run_account(name, O, C, latest, cfg, alert) -> str:
     strategy, limits = ACCOUNTS[name]
     d = Path("state") / f"paper_{name}"
@@ -91,50 +129,30 @@ def run_account(name, O, C, latest, cfg, alert) -> str:
     rs = (json.loads(rf.read_text(encoding="utf-8")) if rf.exists() else
           {"initial": capital, "last_run_day": None, "pending": None,
            "runs_since_rebalance": 999})
-    if rs["last_run_day"] == latest:
+    last = rs["last_run_day"]
+    if last == latest:
         return f"{name}: already ran for {latest}"
 
     broker = PaperBroker(state_dir=d, capital=capital, costs=get_costs(cfg),
                          limits=limits, kill_path=d / "KILL.json", alert=alert)
-    halted = killswitch.is_engaged() or killswitch.is_engaged(broker.kill_path)
+    # A new account starts today (no back-filling). An existing one replays every
+    # trading day it missed, oldest first, so the equity curve stays continuous.
+    days = [latest] if last is None else [x for x in O.index if last < x <= latest]
+    if not days:
+        return f"{name}: no new trading days after {last}"
+
     filled = rejected = 0
-    note = ""
-
-    # 1. Fill yesterday's signal at today's open (only if it is the very next bar)
-    pending = rs["pending"]
-    if pending:
-        later = [x for x in O.index if x > pending["signal_day"]]
-        if later and later[0] != latest:
-            note = " (missed a trading day: pending orders expired)"
-        elif later and not halted:
-            broker.mark(latest, O.loc[latest].to_dict())
-            filled, rejected = rebalance(broker, latest, pending["targets"],
-                                         O.loc[latest])
-
-    # 2. Mark to the close
-    broker.mark(latest, C.loc[latest].to_dict())
-    halted = halted or killswitch.is_engaged(broker.kill_path)
-
-    # 3. Decide tomorrow's orders from today's close
-    new_pending = None
-    if not halted:
-        ctx = {"tickers": list(O.columns), "positions": broker.s["positions"],
-               "runs_since_rebalance": rs["runs_since_rebalance"],
-               "ret_20": C.pct_change(20, fill_method=None).iloc[-1]}
-        targets = strategy(ctx)
-        if targets:
-            new_pending = {"signal_day": latest, "targets": targets}
-            rs["runs_since_rebalance"] = 0
-        else:
-            rs["runs_since_rebalance"] += 1
-
-    rs.update(last_run_day=latest, pending=new_pending)
-    rf.write_text(json.dumps(rs, indent=2), encoding="utf-8")
+    notes, halted = "", False
+    for day in days:
+        f, r, n, halted = process_day(strategy, broker, rs, O, C, day)
+        filled, rejected, notes = filled + f, rejected + r, notes + n
+        rf.write_text(json.dumps(rs, indent=2), encoding="utf-8")   # save after each day
 
     eq = broker.equity()
+    replay = f", replayed {len(days)} days" if len(days) > 1 else ""
     line = (f"{name}: Rs {eq:,.0f} ({eq / rs['initial'] - 1:+.2%}), "
             f"{len(broker.s['positions'])} holdings, "
-            f"{filled} filled / {rejected} rejected{note}")
+            f"{filled} filled / {rejected} rejected{replay}{notes}")
     return line + (" [HALTED]" if halted else "")
 
 
