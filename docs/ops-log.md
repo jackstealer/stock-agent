@@ -14,6 +14,13 @@ Performance metrics captured during maintenance phases.
 | 2026-10-31 | 0     | scheduler_last_result   | 0              | schtasks /query /tn stock-agent-update          |
 | 2026-10-31 | 0     | paper_buy_hold_equity   | 2553216.47     | python -c account_summary('buy_hold')           |
 | 2026-10-31 | 0     | paper_momentum_equity   | 2597296.88     | python -c account_summary('momentum_top5')      |
+| 2026-10-31 | 1     | pytest_cold_seconds     | 13.34          | Measure-Command pytest -q (Run 1 cold, pycache cleared) |
+| 2026-10-31 | 1     | pytest_warm_run2_s      | 12.13          | Measure-Command pytest -q (Run 2 warm)          |
+| 2026-10-31 | 1     | pytest_warm_run3_s      | 10.97          | Measure-Command pytest -q (Run 3 warm)          |
+| 2026-10-31 | 1     | pytest_warm_median_s    | 12.13          | warm median of runs 2-3                         |
+| 2026-10-31 | 1     | pytest_count            | 83             | pytest -q (confirmed)                           |
+| 2026-10-31 | 1     | local_branch_deleted    | feat/risk-paper| git branch -D feat/risk-paper                   |
+| 2026-10-31 | 1     | slowdown_31s_cause      | not_reproduced | cold/warm ratio 1.10x; threshold 2x not reached |
 
 ## Baseline reference (2026-10-27)
 
