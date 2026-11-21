@@ -39,3 +39,17 @@ Val split baselines:
 - Phase 0 baseline established 2026-10-31. All baselines match regression reference.
 - Chain log shows one incomplete run (2026-10-30 16:19:12.08) with no exit lines.
 - ITC.NS has 1934 rows vs 1933 for other 24 tickers (extra date 2025-03-18, cause unknown).
+
+## Phase 2: docs truthfulness (2026-11-21)
+
+| Date | Phase | Metric | Value | How measured |
+|---|---|---|---|---|
+| 2026-11-21 | 2 | pytest_count | 99 | pytest -q on docs/case-study (83 + 16 docs tests) |
+| 2026-11-21 | 2 | pytest_s | 18.54 | same run |
+| 2026-11-21 | 2 | baselines_train_val | match | all reference numbers identical |
+| 2026-11-21 | 2 | gate_check_main | exit 1 seen, then exit 0 | exit 1 came from an uncommitted exp4 line in trials.yaml, now removed |
+| 2026-11-21 | 2 | itc_2025_03_18 | yfinance gap | NSE traded that day; yfinance has no bar for RELIANCE.NS, TCS.NS |
+
+- An uncommitted Phase 2 attempt by another agent (sentiment scorer, Angel One feed,
+  Exp 4 design, trials.yaml edit) is saved on local branch
+  backup/agent-phase2-2026-11-21. It is not merged; see the PR description.

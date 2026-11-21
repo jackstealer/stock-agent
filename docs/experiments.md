@@ -87,3 +87,31 @@ may lag in the calm bull years; 3a probably fails criterion (2) or (4).
   expensive. Nothing was tuned afterwards. 3b is not promoted to a paper account under
   the pre-registered rule.
 - Trials counted so far: 4 formulations evaluated (Exp 1, Exp 2, 3a, 3b), all failed.
+
+## Audit note (2026-11-21)
+
+Pre-registration, checked by git ancestry (`git merge-base --is-ancestor <design> <code>`).
+Commit dates can be edited; ancestry cannot be reordered without rewriting history.
+- Exp 1: NOT pre-registered. Its entry was committed in 8a5b7f8 (2026-10-27 11:28),
+  after the evaluation code f3bdf9d (2026-10-27 02:12).
+- Exp 2: pre-registered. The design d5cd634 (2026-10-28 00:55) is an ancestor of the
+  code 7291d56 (00:59) and of the result 96feb81 (01:00).
+- Exp 3a and 3b: pre-registered. The design 10fd609 (2026-10-28 01:47) is an ancestor
+  of the code 11d9f28 (01:48).
+- No line of either committed design was removed later (`git diff -U0 <design> HEAD`
+  shows 0 deleted lines).
+- The Exp 3 result lines above were first committed in 638cd62 (2026-10-28 01:53) on
+  branch feat/exp3, which was never merged. They reached main by cherry-pick (the commit
+  message carries the "cherry picked from" line). The text is unchanged.
+- The promotion gate (docs/gate.md) was built after Exp 1-3 were run. It counts them as
+  trials retroactively; it did not gate them in advance.
+
+Data note: ITC.NS has a bar on 2025-03-18 that the other 24 stocks lack. NSE traded that
+day (market reports from Moneycontrol and Hindu BusinessLine give a Sensex close of
+75,301.26, up 1,131.31), and yfinance still returned no 2025-03-18 bar for RELIANCE.NS
+or TCS.NS when re-queried on 2026-11-21. So 24 stocks are missing a real session; the
+ITC.NS bar is not the anomaly. The date is in the locked test period (after val_end
+2023-12-31), so no result above is affected. The paper runner keeps only dates on which
+all 25 stocks have bars (src/paper/run_daily.py), but the baseline backtester
+forward-fills missing days (src/backtest/baselines.py), so the gap must be resolved
+before the single test-split look.
