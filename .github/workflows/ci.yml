@@ -33,8 +33,9 @@ jobs:
           docker run --rm stock-agent python -c
           "import src.data.update, src.paper.run_daily, src.news.collect, src.monitor.quality; print('imports ok')"
 
+  # Runs on pull requests and on direct pushes to main (the owner works on main only).
+  # On a push it can only report after the fact; it cannot block the push.
   protected-files:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -43,20 +44,23 @@ jobs:
       - name: Require a written reason when gate or risk rules change
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
+          # PR: the reason goes in the PR description. Push: in a pushed commit message.
+          reason="$PR_BODY"
+          if [ "${{ github.event_name }}" = "push" ]; then reason=$(git log --format=%B "$BASE..HEAD"); fi
           changed=$(git diff --name-only "$BASE" HEAD -- \
             docs/gate.md docs/trials.yaml src/gate/check.py src/gate/stats.py \
             src/risk/limits.py src/risk/killswitch.py src/backtest/splits.py)
           if [ -n "$changed" ]; then
             echo "Protected files changed:"
             echo "$changed"
-            if ! printf '%s' "$PR_BODY" | grep -Eq '^Rules-change-reason: .{15,}'; then
-              echo "::error::Add a line 'Rules-change-reason: <why>' (15+ characters) to the PR description."
+            if ! printf '%s' "$reason" | grep -Eq '^Rules-change-reason: .{15,}'; then
+              echo "::error::Add a line 'Rules-change-reason: <why>' (15+ characters) to the PR description or commit message."
               exit 1
             fi
           fi
       - name: docs/experiments.md is append-only
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: python3 scripts/check_append_only.py "$BASE" docs/experiments.md
