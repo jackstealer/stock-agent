@@ -16,7 +16,7 @@ Full write-up: [docs/CASE_STUDY.md](docs/CASE_STUDY.md).
 | Models | XGBoost with walk-forward training and purging of overlapping labels. Tests check that features use only past data. |
 | Tracking | Every evaluation is logged to MLflow, and a trial registry counts every experiment. |
 | Paper trading | A simulated broker with hard risk limits (position caps, no leverage, daily loss, drawdown) and a file-based kill switch. A daily runner keeps a buy-and-hold benchmark account and a momentum account. |
-| News | A daily collector stores timestamped headlines per stock. The collection time is kept so future backtests can be point-in-time. No sentiment model is built yet. |
+| News | A daily collector stores timestamped headlines per stock. The collection time is kept so future backtests can be point-in-time. Each night the headlines are scored by an offline word-list scorer (`src/news/sentiment.py`; Google Gemini optional). No experiment uses the scores yet. |
 | Promotion gate | Deterministic code: the trial registry must match MLflow, enough data, deflated Sharpe on active returns (accounts for the number of trials tried), and a positive edge in both halves of the sample. |
 
 ## Results so far
