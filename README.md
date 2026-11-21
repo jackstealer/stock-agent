@@ -5,6 +5,8 @@ A research and paper-trading system for 25 large-cap NSE stocks, built around on
 
 > **Status: research project, paper trading only.** No real orders are ever sent to a broker. Nothing here is investment advice, and no strategy built so far has beaten a simple buy-and-hold benchmark (see Results).
 
+Full write-up: [docs/CASE_STUDY.md](docs/CASE_STUDY.md).
+
 ## What is built
 
 | Area | What it does |
@@ -19,12 +21,12 @@ A research and paper-trading system for 25 large-cap NSE stocks, built around on
 
 ## Results so far
 
-Every experiment was pre-registered in `docs/experiments.md` (rules and pass/fail criteria written before running). All failed.
+Experiments 2 and 3 were pre-registered: their design and pass/fail criteria were committed to `docs/experiments.md` before the code that produced the result (checkable with `git merge-base --is-ancestor`, see the audit note in that file). Experiment 1's entry was written after its result. All four failed.
 
 | Experiment | Window | Result | Verdict |
 |---|---|---|---|
-| 1. XGBoost, up more than 0.5% in 5 days | 2021-2023 walk-forward | AUC 0.48 / 0.48 / 0.51. Return -9.9%, Sharpe -0.57 vs buy-and-hold +75.8%, Sharpe 1.46. 3,534 trades, about Rs 6.4 lakh in costs on Rs 25 lakh | No edge; costs dominate |
-| 2. Cross-sectional top-5, weekly | 2021-2023 | AUC 0.49 / 0.48 / 0.50. Sharpe 0.57 vs 1.46 buy-and-hold. Beat 8 of 20 random portfolios | Failed |
+| 1. XGBoost, up more than 0.5% in 5 days | 2021-2023 walk-forward | AUC 0.478 / 0.477 / 0.514. Return -9.9%, Sharpe -0.57 vs buy-and-hold +75.8%, Sharpe 1.46. 3,534 trades, about Rs 6.4 lakh in costs on Rs 25 lakh | No edge; costs dominate |
+| 2. Cross-sectional top-5, weekly | 2021-2023 | AUC 0.487 / 0.482 / 0.501. Sharpe 0.57 vs 1.46 buy-and-hold. Beat 8 of 20 random portfolios | Failed |
 | 3a. 12-1 momentum, top 8 monthly | 2020-02 to 2023-12 | Sharpe 1.03 vs 1.10 benchmark. Beat 51 of 100 random portfolios. Costs 4.7% of capital | Failed |
 | 3b. 200-day trend filter, weekly | 2020-02 to 2023-12 | Sharpe 1.46 vs 1.10. Max drawdown -17.1% vs -34.3%. But +0.86 in 2020-21 and -0.29 in 2022-23 | Failed the by-half check |
 
@@ -44,6 +46,8 @@ Reading: price-only daily signals on these stocks, at retail costs, did not beat
 - yfinance is unofficial and can break; the daily job alerts when it does.
 - The scheduler runs on a laptop (Windows Task Scheduler), so a day can be missed; the job catches up on the next run.
 - Cost rates approximate Indian delivery charges and should be checked against a broker's current fee table.
+- yfinance has no 2025-03-18 bar for 24 of the 25 stocks, although NSE traded that day. The date is in the locked test period, so no reported result uses it.
+- The promotion gate was built after experiments 1-3, so it counts them as trials retroactively rather than having gated them in advance.
 
 ## Not built yet
 
@@ -79,5 +83,5 @@ src/risk/       risk limits, kill switch
 src/paper/      paper broker, daily runner
 src/news/       headline collector
 src/gate/       promotion gate and trial registry
-docs/           experiments.md (pre-registered log), gate.md, trials.yaml
+docs/           experiments.md (append-only experiment log), gate.md, trials.yaml, CASE_STUDY.md
 ```
