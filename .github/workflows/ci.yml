@@ -43,23 +43,9 @@ jobs:
           fetch-depth: 0
       - name: Require a written reason when gate or risk rules change
         env:
-          PR_BODY: ${{ github.event.pull_request.body }}
+          REASON_TEXT: ${{ github.event.pull_request.body }}   # empty on push: commit messages are used
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: |
-          # PR: the reason goes in the PR description. Push: in a pushed commit message.
-          reason="$PR_BODY"
-          if [ "${{ github.event_name }}" = "push" ]; then reason=$(git log --format=%B "$BASE..HEAD"); fi
-          changed=$(git diff --name-only "$BASE" HEAD -- \
-            docs/gate.md docs/trials.yaml src/gate/check.py src/gate/stats.py \
-            src/risk/limits.py src/risk/killswitch.py src/backtest/splits.py)
-          if [ -n "$changed" ]; then
-            echo "Protected files changed:"
-            echo "$changed"
-            if ! printf '%s' "$reason" | grep -Eq '^Rules-change-reason: .{15,}'; then
-              echo "::error::Add a line 'Rules-change-reason: <why>' (15+ characters) to the PR description or commit message."
-              exit 1
-            fi
-          fi
+        run: python3 scripts/check_protected.py "$BASE" HEAD
       - name: docs/experiments.md is append-only
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}

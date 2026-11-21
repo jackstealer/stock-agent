@@ -65,6 +65,7 @@ git clone https://github.com/jackstealer/stock-agent.git
 cd stock-agent
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
+git config core.hooksPath .githooks   # every push runs the tests and checks first
 copy .env.example .env             # then fill in Telegram values (optional)
 .venv\Scripts\python.exe -m src.data.backfill
 .venv\Scripts\python.exe -m pytest -v

@@ -1,0 +1,38 @@
+#!/bin/sh
+# Pre-push gate for this main-only repo. Nothing reaches GitHub unless it is main,
+# a fast-forward, exactly the committed code, and every check passes.
+# Enable once per clone:   git config core.hooksPath .githooks
+# Emergency bypass (skips EVERY check, use rarely):   git push --no-verify
+set -u
+
+fail() { echo "pre-push: REFUSED - $*" >&2; exit 1; }
+
+if [ -x .venv/Scripts/python.exe ]; then PY=.venv/Scripts/python.exe
+elif [ -x .venv/bin/python ]; then PY=.venv/bin/python
+else fail "no .venv found; create it as in the README"; fi
+
+zero=0000000000000000000000000000000000000000
+base=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ "$remote_ref" = "refs/heads/main" ] || fail "only main may be pushed (got $remote_ref)"
+  [ "$local_sha" != "$zero" ] || fail "deleting main is not allowed"
+  [ "$local_sha" = "$(git rev-parse HEAD)" ] || fail "push the checked-out commit; HEAD is not $local_sha"
+  if [ "$remote_sha" != "$zero" ]; then
+    git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null \
+      || fail "not a fast-forward (force-push, or GitHub has new commits: git pull --rebase)"
+  fi
+  base=$remote_sha
+done
+[ -n "$base" ] || exit 0   # nothing is being pushed
+
+git diff --quiet HEAD -- || fail "uncommitted changes; the tests must run on exactly what is pushed"
+untracked=$(git ls-files --others --exclude-standard -- 'src/*.py' 'tests/*.py' 'scripts/*.py')
+[ -z "$untracked" ] || fail "untracked Python files would change the test run: $untracked"
+
+echo "pre-push: running checks on $(git rev-parse --short HEAD) ..."
+"$PY" -m pytest -q -p no:cacheprovider || fail "tests failed"
+if [ "$base" != "$zero" ]; then
+  "$PY" scripts/check_append_only.py "$base" docs/experiments.md || fail "docs/experiments.md lost text"
+  "$PY" scripts/check_protected.py "$base" HEAD || fail "a protected file changed without a reason"
+fi
+echo "pre-push: all checks passed"
