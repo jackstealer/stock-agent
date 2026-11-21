@@ -72,3 +72,18 @@ re-run are logged as the same experiment with the bug disclosed.
 
 Prior (a guess, written before running): 3b probably cuts drawdown through Mar-2020 but
 may lag in the calm bull years; 3a probably fails criterion (2) or (4).
+- Result (window 2020-02-03 to 2023-12-29, 969 days, 25 stocks, net of costs):
+  Benchmark equal-weight buy-and-hold: +106.6%, Sharpe 1.10, max drawdown -34.3%.
+  3a momentum 12-1 top-8 monthly: +107.7%, Sharpe 1.03, drawdown -32.7%, 172 trades,
+  costs 4.7% of capital. Random top-8 (mean of 100): +104.9%, Sharpe 1.00.
+  3b trend filter (200d): +101.5%, Sharpe 1.46, drawdown -17.1%, 225 trades, costs 2.2%.
+- Verdicts against the pre-registered criteria:
+  3a FAILED (all four failed: Sharpe below benchmark, beat 51/100 random, costs 4.7%,
+  half-diffs -0.24 / +0.21).
+  3b FAILED (passed Sharpe, drawdown and cost criteria; failed the by-half check:
+  +0.86 in 2020-21, -0.29 in 2022-23).
+- Observations: 3b's protection comes from the Mar-2020 crash and it lagged in the calm
+  years, as predicted in the prior. 3a was indistinguishable from random picks and too
+  expensive. Nothing was tuned afterwards. 3b is not promoted to a paper account under
+  the pre-registered rule.
+- Trials counted so far: 4 formulations evaluated (Exp 1, Exp 2, 3a, 3b), all failed.
