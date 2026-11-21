@@ -14,7 +14,8 @@ def check_ticker(ticker, interval="1d", root="data/raw", today=None,
     df = read_bars(ticker, interval, root)
     if df.empty:
         return {"ticker": ticker, "rows": 0, "first": None, "last": None,
-                "problems": ["no data"], "jumps": {}, "zero_vol_dates": set()}
+                "problems": ["no data"], "jumps": {}, "zero_vol_dates": set(),
+                "dates": set()}
 
     df = df.sort_values("timestamp").reset_index(drop=True)
     ts = df["timestamp"]
@@ -44,7 +45,30 @@ def check_ticker(ticker, interval="1d", root="data/raw", today=None,
 
     return {"ticker": ticker, "rows": len(df), "first": ts.iloc[0].date(),
             "last": ts.iloc[-1].date(), "problems": problems,
-            "jumps": jumps, "zero_vol_dates": zero_dates}
+            "jumps": jumps, "zero_vol_dates": zero_dates, "dates": set(ts.dt.date)}
+
+
+def partial_dates(dates: dict) -> tuple[dict, dict]:
+    """Dates not shared by every stock, given {ticker: set of dates}.
+
+    A date more than half the stocks have is a missing session for each stock that
+    lacks it inside its own first..last range. A date at most half have is ambiguous
+    (a bad extra bar, or a real session the source dropped for the rest; 2025-03-18 was
+    the second kind), so it is returned separately to be reported, not judged."""
+    n = len(dates)
+    span = {t: (min(s), max(s)) for t, s in dates.items() if s}
+    counts = Counter(d for s in dates.values() for d in s)
+    missing, minority = {}, {}
+    for d, c in counts.items():
+        lacking = [t for t, (lo, hi) in span.items() if lo <= d <= hi and d not in dates[t]]
+        if not lacking:
+            continue
+        if c > n / 2:
+            for t in lacking:
+                missing.setdefault(t, []).append(d)
+        else:
+            minority[d] = sorted(t for t, s in dates.items() if d in s)
+    return missing, minority
 
 
 def main(config_path="configs/config.yaml") -> None:
@@ -77,6 +101,19 @@ def main(config_path="configs/config.yaml") -> None:
         if r["rows"] and abs(r["rows"] - median) > 0.02 * median:
             r["problems"].append(
                 f"row count {r['rows']} differs from median {int(median)}")
+
+    missing, minority = partial_dates({r["ticker"]: r["dates"] for r in results})
+    for r in results:
+        if r["ticker"] in missing:
+            ds = sorted(missing[r["ticker"]])
+            r["problems"].append(f"missing {len(ds)} session(s) most stocks have: "
+                                 + ", ".join(str(d) for d in ds[:5]))
+
+    if minority:
+        print("Dates only some stocks have (check the source; not counted as errors):")
+        for d, have in sorted(minority.items()):
+            print(f"  {d}: {len(have)}/{n} have it ({', '.join(have[:5])})")
+        print()
 
     if market_zero:
         print("Market-wide zero-volume days (not counted as errors):",
