@@ -46,7 +46,7 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           changed=$(git diff --name-only "$BASE" HEAD -- \
-            docs/gate.md src/gate/check.py src/gate/stats.py \
+            docs/gate.md docs/trials.yaml src/gate/check.py src/gate/stats.py \
             src/risk/limits.py src/risk/killswitch.py src/backtest/splits.py)
           if [ -n "$changed" ]; then
             echo "Protected files changed:"
@@ -56,3 +56,7 @@ jobs:
               exit 1
             fi
           fi
+      - name: docs/experiments.md is append-only
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: python3 scripts/check_append_only.py "$BASE" docs/experiments.md
